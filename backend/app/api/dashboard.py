@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.core.config import get_settings
@@ -16,29 +17,38 @@ router = APIRouter()
 
 @router.get("/summary")
 def get_dashboard_summary(session: Session = Depends(get_session)):
-    """仪表盘摘要。"""
+    """Dashboard summary."""
     settings = get_settings()
     since_24h = datetime.utcnow() - timedelta(hours=24)
-    providers = session.exec(select(Provider)).all()
-    active_targets = session.exec(select(Target).where(Target.enabled.is_(True))).all()
-    recent_runs = session.exec(select(RunRecord).order_by(RunRecord.started_at.desc())).all()
+
+    provider_count = session.exec(select(func.count()).select_from(Provider)).one()
+    active_targets = session.exec(
+        select(func.count()).select_from(Target).where(Target.enabled.is_(True))
+    ).one()
+    changes_last_24h = session.exec(
+        select(func.count())
+        .select_from(RunRecord)
+        .where(RunRecord.has_change.is_(True), RunRecord.started_at >= since_24h)
+    ).one()
+    recent_failures_rows = session.exec(
+        select(RunRecord)
+        .where(RunRecord.status == "failed")
+        .order_by(RunRecord.started_at.desc())
+        .limit(5)
+    ).all()
     recent_alerts = session.exec(
-        select(Alert).where(Alert.is_read.is_(False)).order_by(Alert.created_at.desc())
-    ).all()[:5]
+        select(Alert).where(Alert.is_read.is_(False)).order_by(Alert.created_at.desc()).limit(5)
+    ).all()
     scheduler_runtime = get_scheduler_runtime_snapshot()
 
-    changes_last_24h = len(
-        [run for run in recent_runs if run.has_change and run.started_at >= since_24h]
-    )
     recent_failures = [
         {
             "run_id": run.id,
             "target_id": run.target_id,
             "error_message": run.error_message,
         }
-        for run in recent_runs
-        if run.status == "failed"
-    ][:5]
+        for run in recent_failures_rows
+    ]
     recent_opportunities = [
         {
             "id": alert.id,
@@ -51,8 +61,8 @@ def get_dashboard_summary(session: Session = Depends(get_session)):
 
     return {
         "project": settings.project_name,
-        "provider_count": len(providers),
-        "active_targets": len(active_targets),
+        "provider_count": provider_count,
+        "active_targets": active_targets,
         "changes_last_24h": changes_last_24h,
         "scheduler": {
             "enabled": settings.scheduler_enabled,
