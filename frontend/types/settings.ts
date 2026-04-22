@@ -1,0 +1,20 @@
+export type RuntimeSettings = {
+  project_name: string;
+  project_env: string;
+  timezone: string;
+  scheduler_enabled: boolean;
+  scheduler_scan_interval_seconds: number;
+  default_poll_interval_seconds: number;
+  max_concurrent_watchers: number;
+  global_rate_limit_per_minute: number;
+  enforce_target_poll_interval: boolean;
+  webhook_enabled: boolean;
+  webhook_url: string | null;
+  webhook_url_configured: boolean;
+  webhook_timeout_seconds: number;
+  enable_screenshot: boolean;
+  screenshot_dir: string;
+  playwright_headless: boolean;
+  playwright_timeout_ms: number;
+  playwright_wait_until: string;
+};

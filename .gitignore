@@ -1,0 +1,23 @@
+.next
+node_modules
+.venv
+__pycache__
+.pytest_cache
+*.pyc
+.env
+backend/.venv
+backend/__pycache__
+frontend/.next
+frontend/node_modules
+data/
+captures/
+logs/
+playwright-report/
+test-results/
+
+# 虚拟环境与浏览器二进制（不纳入版本控制）
+browser-use-venv/
+pw-browsers/
+
+# 个人笔记文件
+.md

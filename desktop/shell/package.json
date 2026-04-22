@@ -1,0 +1,15 @@
+{
+  "name": "cloud-offer-watch-desktop-shell",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "doctor": "node -e \"console.log('electron path', require('electron'))\""
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3"
+  }
+}
